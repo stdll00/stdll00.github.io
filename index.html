@@ -1,0 +1,49 @@
+<!doctype html>
+<!--
+Copyright 2018 The Go Authors. All rights reserved.
+Use of this source code is governed by a BSD-style
+license that can be found in the LICENSE file.
+-->
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Go wasm ojichat</title>
+</head>
+
+<body>
+<script src="wasm_exec.js"></script>
+<script>
+    if (!WebAssembly.instantiateStreaming) { // polyfill
+        WebAssembly.instantiateStreaming = async (resp, importObject) => {
+            const source = await (await resp).arrayBuffer();
+            return await WebAssembly.instantiate(source, importObject);
+        };
+    }
+    const go = new Go();
+    let mod, inst;
+    let ojichat;
+    WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then(async (result) => {
+        go.run(result.instance); // await -> wait forever
+        document.getElementById("runButton").disabled = false;
+        ojichat = __github_com_stdll00_ojichatjs
+    }).catch((err) => {
+        console.error(err);
+    });
+
+    async function run() {
+        const name = document.getElementById("name").value
+        document.getElementById("message").textContent = ojichat(name)
+    }
+</script>
+<h3> Ojichat WASM</h3>
+<div>
+    <div>
+        <input id="name" placeholder="target Name">
+        <button onClick="run();" id="runButton" disabled>Run</button>
+    </div>
+    <span id="message">  </span>
+</div>
+</body>
+
+
